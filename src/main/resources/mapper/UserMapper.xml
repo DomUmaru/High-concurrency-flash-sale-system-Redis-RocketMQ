@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 
+    TODO: 这里的 namespace 必须对应 Mapper 接口的全限定名 
+-->
+<mapper namespace="org.example.cruddemo.mapper.UserMapper">
+
+    <!-- 
+        TODO: 编写 resultMap (可选)，如果数据库字段 user_name 和实体字段 username 能够自动映射，可以不写。
+        但通常建议写一个 BaseResultMap。
+    -->
+
+    <!-- 
+        TODO: 编写 insert 语句 
+        提示：insert into user (...) values (...)
+    -->
+    <insert id="insert" parameterType="org.example.cruddemo.entity.User" useGeneratedKeys="true" keyProperty="id">
+        <!-- 请在此处编写 SQL -->
+    </insert>
+
+    <!-- 
+        TODO: 编写 delete 语句 
+        提示：delete from user where id = #{id}
+    -->
+    <delete id="deleteById">
+        <!-- 请在此处编写 SQL -->
+    </delete>
+
+    <!-- 
+        TODO: 编写 update 语句 
+        提示：update user set ... where id = #{id}
+    -->
+    <update id="update" parameterType="org.example.cruddemo.entity.User">
+        <!-- 请在此处编写 SQL -->
+    </update>
+
+    <!-- 
+        TODO: 编写 selectById 语句 
+        提示：select * from user where id = #{id}
+    -->
+    <select id="selectById" resultType="org.example.cruddemo.entity.User">
+        <!-- 请在此处编写 SQL -->
+    </select>
+
+    <!-- 
+        TODO: 编写 selectList 语句 (分页)
+        提示：select * from user limit #{offset}, #{limit}
+    -->
+    <select id="selectList" resultType="org.example.cruddemo.entity.User">
+        <!-- 请在此处编写 SQL -->
+    </select>
+
+</mapper>
