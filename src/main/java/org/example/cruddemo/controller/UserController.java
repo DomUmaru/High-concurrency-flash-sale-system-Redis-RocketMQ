@@ -1,6 +1,8 @@
 package org.example.cruddemo.controller;
 
+import org.example.cruddemo.common.Result;
 import org.example.cruddemo.dto.UserDTO;
+import org.example.cruddemo.entity.User;
 import org.example.cruddemo.service.UserService;
 import org.example.cruddemo.vo.UserVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +13,7 @@ import java.util.List;
 
 /**
  * User Controller
- * ½ÓÊÕ HTTP ÇëÇó£¬µ÷ÓÃ Service ²ã
+ * æ¥æ”¶ HTTP è¯·æ±‚ï¼Œè°ƒç”¨ Service å±‚
  */
 @RestController
 @RequestMapping("/users")
@@ -21,70 +23,78 @@ public class UserController {
     private UserService userService;
 
     /**
-     * ĞÂÔöÓÃ»§
+     * æ–°å¢ç”¨æˆ·
      * POST /users
-     * @param userDTO ÇëÇóÌå²ÎÊı
-     * @return ´´½¨³É¹¦µÄÓÃ»§
+     * @param userDTO è¯·æ±‚ä½“å‚æ•°
+     * @return åˆ›å»ºæˆåŠŸçš„ç”¨æˆ·
      */
     @PostMapping
-    public ResponseEntity<UserVO> addUser(@RequestBody UserDTO userDTO) {
-        // TODO: µ÷ÓÃ userService.createUser(userDTO)
-        // TODO: ·µ»Ø ResponseEntity.ok(result)
-        throw new UnsupportedOperationException("Method not implemented yet");
+    public Result<UserVO> addUser(@RequestBody UserDTO userDTO) {
+        UserVO userVO = userService.createUser(userDTO);
+        return Result.success(userVO);
     }
 
     /**
-     * É¾³ıÓÃ»§
+     * åˆ é™¤ç”¨æˆ·
      * DELETE /users/{id}
-     * @param id ÓÃ»§ID
-     * @return ÎŞÄÚÈİ
+     * @param id ç”¨æˆ·ID
+     * @return æ— å†…å®¹
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        // TODO: µ÷ÓÃ userService.deleteUser(id)
-        // TODO: ·µ»Ø ResponseEntity.noContent().build()
-        throw new UnsupportedOperationException("Method not implemented yet");
+    public Result<Void> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return Result.success(null);
     }
 
     /**
-     * ĞŞ¸ÄÓÃ»§
+     * ä¿®æ”¹ç”¨æˆ·
      * PUT /users
-     * @param userDTO ÇëÇóÌå²ÎÊı (Ğè°üº¬ID)
-     * @return ĞŞ¸ÄºóµÄÓÃ»§
+     * @param userDTO è¯·æ±‚ä½“å‚æ•° (éœ€åŒ…å«ID)
+     * @return ä¿®æ”¹åçš„ç”¨æˆ·
      */
     @PutMapping
-    public ResponseEntity<UserVO> updateUser(@RequestBody UserDTO userDTO) {
-        // TODO: µ÷ÓÃ userService.updateUser(userDTO)
-        // TODO: ·µ»Ø ResponseEntity.ok(result)
-        throw new UnsupportedOperationException("Method not implemented yet");
+    public Result<UserVO> updateUser(@RequestBody UserDTO userDTO) {
+        UserVO userVO = userService.updateUser(userDTO);
+        return Result.success(userVO);
     }
 
     /**
-     * ²éÑ¯ÓÃ»§ÏêÇé
+     * æŸ¥è¯¢ç”¨æˆ·è¯¦æƒ…
      * GET /users/{id}
-     * @param id ÓÃ»§ID
-     * @return ÓÃ»§ÏêÇé
+     * @param id ç”¨æˆ·ID
+     * @return ç”¨æˆ·è¯¦æƒ…
      */
     @GetMapping("/{id}")
-    public ResponseEntity<UserVO> getUser(@PathVariable Long id) {
-        // TODO: µ÷ÓÃ userService.getUser(id)
-        // TODO: ·µ»Ø ResponseEntity.ok(result)
-        throw new UnsupportedOperationException("Method not implemented yet");
+    public Result<UserVO> getUser(@PathVariable Long id) {
+        UserVO userVO = userService.getUser(id);
+        return Result.success(userVO);
     }
 
     /**
-     * ·ÖÒ³²éÑ¯ÓÃ»§ÁĞ±í
+     * åˆ†é¡µæŸ¥è¯¢ç”¨æˆ·åˆ—è¡¨
      * GET /users?page=1&size=10
-     * @param page Ò³Âë£¬Ä¬ÈÏÎª1
-     * @param size Ã¿Ò³ÊıÁ¿£¬Ä¬ÈÏÎª10
-     * @return ÓÃ»§ÁĞ±í
+     * @param page é¡µç ï¼Œé»˜è®¤ä¸º1
+     * @param size æ¯é¡µæ•°é‡ï¼Œé»˜è®¤ä¸º10
+     * @return ç”¨æˆ·åˆ—è¡¨
      */
     @GetMapping
     public ResponseEntity<List<UserVO>> listUsers(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
-        // TODO: µ÷ÓÃ userService.getUserList(page, size)
-        // TODO: ·µ»Ø ResponseEntity.ok(result)
+        // TODO: è°ƒç”¨ userService.getUserList(page, size)
+        // TODO: è¿”å› ResponseEntity.ok(result)
         throw new UnsupportedOperationException("Method not implemented yet");
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UserVO> updateUser(@PathVariable Long id, @RequestBody UserDTO userDTO) {
+        UserVO userVO = userService.updateUserById(id, userDTO);
+        return ResponseEntity.ok(userVO);
+    }
+
+    @GetMapping("/search")
+    public Result<User> search(@RequestParam String username) {
+        User user = userService.getUserByUsername(username);
+        return Result.success(user);
     }
 }

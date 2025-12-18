@@ -10,12 +10,12 @@ public class SeckillGoods {
     private Long id;
     
     /**
-     * ÉĚĆˇĂűłĆ
+     * 商品名字
      */
     private String goodsName;
     
     /**
-     * ĘŁÓŕżâ´ć
+     * 库存
      */
     private Integer stockCount;
 }

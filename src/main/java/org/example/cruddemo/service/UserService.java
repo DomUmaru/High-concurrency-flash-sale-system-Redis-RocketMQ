@@ -1,47 +1,52 @@
 package org.example.cruddemo.service;
 
 import org.example.cruddemo.dto.UserDTO;
+import org.example.cruddemo.entity.User;
 import org.example.cruddemo.vo.UserVO;
 import java.util.List;
 
 /**
- * User Service ½Ó¿Ú
- * ¶¨ÒåÒµÎñÂß¼­¹æ·¶
+ * User Service æ¥å£
+ * å®šä¹‰ä¸šåŠ¡é€»è¾‘è§„èŒƒ
  */
 public interface UserService {
 
     /**
-     * ´´½¨ÓÃ»§
-     * @param userDTO Ç°¶Ë´«ÈëµÄ²ÎÊı
-     * @return ´´½¨³É¹¦ºóµÄ UserVO (¿ÉÑ¡£¬Ò²¿ÉÒÔÖ»·µ»Ø boolean »ò void)
+     * åˆ›å»ºç”¨æˆ·
+     * @param userDTO å‰ç«¯ä¼ å…¥çš„å‚æ•°
+     * @return åˆ›å»ºæˆåŠŸåçš„ UserVO (å¯é€‰ï¼Œä¹Ÿå¯ä»¥åªè¿”å› boolean æˆ– void)
      */
     UserVO createUser(UserDTO userDTO);
 
     /**
-     * É¾³ıÓÃ»§
-     * @param id ÓÃ»§ID
+     * åˆ é™¤ç”¨æˆ·
+     * @param id ç”¨æˆ·ID
      */
     void deleteUser(Long id);
 
     /**
-     * ¸üĞÂÓÃ»§
-     * @param userDTO Ç°¶Ë´«ÈëµÄ²ÎÊı (°üº¬ID)
-     * @return ¸üĞÂºóµÄ UserVO
+     * æ›´æ–°ç”¨æˆ·
+     * @param userDTO å‰ç«¯ä¼ å…¥çš„å‚æ•° (åŒ…å«ID)
+     * @return æ›´æ–°åçš„ UserVO
      */
     UserVO updateUser(UserDTO userDTO);
 
     /**
-     * »ñÈ¡ÓÃ»§ÏêÇé
-     * @param id ÓÃ»§ID
-     * @return UserVO Õ¹Ê¾¶ÔÏó
+     * è·å–ç”¨æˆ·è¯¦æƒ…
+     * @param id ç”¨æˆ·ID
+     * @return UserVO å±•ç¤ºå¯¹è±¡
      */
     UserVO getUser(Long id);
 
     /**
-     * ·ÖÒ³»ñÈ¡ÓÃ»§ÁĞ±í
-     * @param page Ò³Âë (´Ó1¿ªÊ¼)
-     * @param size Ã¿Ò³ÊıÁ¿
-     * @return UserVO ÁĞ±í
+     * åˆ†é¡µè·å–ç”¨æˆ·åˆ—è¡¨
+     * @param page é¡µç  (ä»1å¼€å§‹)
+     * @param size æ¯é¡µæ•°é‡
+     * @return UserVO åˆ—è¡¨
      */
     List<UserVO> getUserList(int page, int size);
+
+    UserVO updateUserById(Long id, UserDTO userDTO);
+
+    User getUserByUsername(String username);
 }

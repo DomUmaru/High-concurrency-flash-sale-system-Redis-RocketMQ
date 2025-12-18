@@ -4,53 +4,78 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!-- 
-    TODO: ÕâÀïµÄ namespace ±ØĞë¶ÔÓ¦ Mapper ½Ó¿ÚµÄÈ«ÏŞ¶¨Ãû 
+    TODO: è¿™é‡Œçš„ namespace å¿…é¡»å¯¹åº” Mapper æ¥å£çš„å…¨é™å®šå 
 -->
 <mapper namespace="org.example.cruddemo.mapper.UserMapper">
 
     <!-- 
-        TODO: ±àĞ´ resultMap (¿ÉÑ¡)£¬Èç¹ûÊı¾İ¿â×Ö¶Î user_name ºÍÊµÌå×Ö¶Î username ÄÜ¹»×Ô¶¯Ó³Éä£¬¿ÉÒÔ²»Ğ´¡£
-        µ«Í¨³£½¨ÒéĞ´Ò»¸ö BaseResultMap¡£
+        TODO: ç¼–å†™ resultMap (å¯é€‰)ï¼Œå¦‚æœæ•°æ®åº“å­—æ®µ user_name å’Œå®ä½“å­—æ®µ username èƒ½å¤Ÿè‡ªåŠ¨æ˜ å°„ï¼Œå¯ä»¥ä¸å†™ã€‚
+        ä½†é€šå¸¸å»ºè®®å†™ä¸€ä¸ª BaseResultMapã€‚
     -->
 
     <!-- 
-        TODO: ±àĞ´ insert Óï¾ä 
-        ÌáÊ¾£ºinsert into user (...) values (...)
+        ç¼–å†™ insert è¯­å¥
+        æç¤ºï¼šinsert into user (...) values (...)
     -->
-    <insert id="insert" parameterType="org.example.cruddemo.entity.User" useGeneratedKeys="true" keyProperty="id">
-        <!-- ÇëÔÚ´Ë´¦±àĞ´ SQL -->
+    <insert id="insert" parameterType="User" useGeneratedKeys="true" keyProperty="id">
+        insert into user (username, password, email, age, create_time)
+            VALUES (#{username}, #{password}, #{email}, #{age}, #{createTime})
     </insert>
 
     <!-- 
-        TODO: ±àĞ´ delete Óï¾ä 
-        ÌáÊ¾£ºdelete from user where id = #{id}
+        TODO: ç¼–å†™ delete è¯­å¥ 
+        æç¤ºï¼šdelete from user where id = #{id}
     -->
     <delete id="deleteById">
-        <!-- ÇëÔÚ´Ë´¦±àĞ´ SQL -->
+        delete from user where id = #{id}
     </delete>
 
     <!-- 
-        TODO: ±àĞ´ update Óï¾ä 
-        ÌáÊ¾£ºupdate user set ... where id = #{id}
+        ç¼–å†™ update è¯­å¥
+        æç¤ºï¼šupdate user set ... where id = #{id}
     -->
-    <update id="update" parameterType="org.example.cruddemo.entity.User">
-        <!-- ÇëÔÚ´Ë´¦±àĞ´ SQL -->
+    <update id="update" parameterType="User">
+        update user
+        <set>
+            <if test="username != null">username = #{username},</if>
+            <if test="password != null">password = #{password},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="age != null">age = #{age},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+        </set>
+        where id = #{id}
     </update>
 
-    <!-- 
-        TODO: ±àĞ´ selectById Óï¾ä 
-        ÌáÊ¾£ºselect * from user where id = #{id}
+
+    <update id="updateById" parameterType="User">
+        update user set
+                        username = #{username},
+                        password = #{password},
+                        email = #{email},
+                        age = #{age},
+                        create_time = #{createTime}
+        where id = #{id}
+    </update>
+
+    <!--
+        ç¼–å†™ selectById è¯­å¥
+        æç¤ºï¼šselect * from user where id = #{id}
     -->
-    <select id="selectById" resultType="org.example.cruddemo.entity.User">
-        <!-- ÇëÔÚ´Ë´¦±àĞ´ SQL -->
+    <select id="selectById" resultType="User">
+        select * from user where id = #{id}
     </select>
 
     <!-- 
-        TODO: ±àĞ´ selectList Óï¾ä (·ÖÒ³)
-        ÌáÊ¾£ºselect * from user limit #{offset}, #{limit}
+        TODO: ç¼–å†™ selectList è¯­å¥ (åˆ†é¡µ)
+        æç¤ºï¼šselect * from user limit #{offset}, #{limit}
     -->
     <select id="selectList" resultType="org.example.cruddemo.entity.User">
-        <!-- ÇëÔÚ´Ë´¦±àĞ´ SQL -->
+        <!-- è¯·åœ¨æ­¤å¤„ç¼–å†™ SQL -->
     </select>
+
+    <select id="selectByUsername" resultType="org.example.cruddemo.entity.User">
+        select * from user where username = #{username}
+    </select>
+
 
 </mapper>

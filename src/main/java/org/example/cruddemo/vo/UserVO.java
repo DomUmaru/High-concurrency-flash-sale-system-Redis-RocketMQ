@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 /**
  * User View Object
- * ÓÃÓÚ·µ»Ø¸øÇ°¶ËÕ¹Ê¾µÄÊı¾İ£¨ÒÑÒş²ØÃô¸ĞĞÅÏ¢ÈçÃÜÂë£©
+ * ç”¨äºè¿”å›ç»™å‰ç«¯å±•ç¤ºçš„æ•°æ®ï¼ˆå·²éšè—æ•æ„Ÿä¿¡æ¯å¦‚å¯†ç ï¼‰
  */
 @Data
 public class UserVO {
@@ -15,22 +15,22 @@ public class UserVO {
     private Long id;
 
     /**
-     * ÓÃ»§Ãû
+     * ç”¨æˆ·å
      */
     private String username;
 
     /**
-     * ÓÊÏä
+     * é‚®ç®±
      */
     private String email;
 
     /**
-     * ÄêÁä
+     * å¹´é¾„
      */
     private Integer age;
 
     /**
-     * ´´½¨Ê±¼ä
+     * åˆ›å»ºæ—¶é—´
      */
     private LocalDateTime createTime;
 }

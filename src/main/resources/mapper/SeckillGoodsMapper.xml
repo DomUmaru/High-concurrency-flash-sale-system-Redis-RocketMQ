@@ -9,7 +9,7 @@
         WHERE id = #{id} AND stock_count > 0
     </update>
 
-    <!-- 防重查询 -->
+    <!-- 根据id查询 -->
     <select id="selectById" resultType="org.example.cruddemo.entity.SeckillGoods">
         SELECT 
             id, 

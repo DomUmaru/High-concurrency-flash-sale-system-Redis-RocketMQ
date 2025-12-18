@@ -5,37 +5,37 @@ import java.time.LocalDateTime;
 
 /**
  * User Entity
- * ¶ÔÓ¦Êı¾İ¿âÖĞµÄ user ±í
+ * å¯¹åº”æ•°æ®åº“ä¸­çš„ user è¡¨
  */
 @Data
 public class User {
     /**
-     * Ö÷¼ü ID
+     * ä¸»é”® ID
      */
     private Long id;
 
     /**
-     * ÓÃ»§Ãû
+     * ç”¨æˆ·å
      */
     private String username;
 
     /**
-     * ÃÜÂë
+     * å¯†ç 
      */
     private String password;
 
     /**
-     * ÓÊÏä
+     * é‚®ç®±
      */
     private String email;
 
     /**
-     * ÄêÁä
+     * å¹´é¾„
      */
     private Integer age;
 
     /**
-     * ´´½¨Ê±¼ä
+     * åˆ›å»ºæ—¶é—´
      */
     private LocalDateTime createTime;
 }

@@ -1,63 +1,158 @@
 package org.example.cruddemo.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.example.cruddemo.dto.UserDTO;
+import org.example.cruddemo.entity.User;
 import org.example.cruddemo.mapper.UserMapper;
 import org.example.cruddemo.service.UserService;
 import org.example.cruddemo.vo.UserVO;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
- * User Service ÊµÏÖÀà
- * ´¦Àí¾ßÌåµÄÒµÎñÂß¼­£¬Èç²ÎÊıĞ£Ñé¡¢DTO/VO×ª»»¡¢µ÷ÓÃMapper
+ * User Service å®ç°ç±»
+ * å¤„ç†å…·ä½“çš„ä¸šåŠ¡é€»è¾‘ï¼Œå¦‚å‚æ•°æ ¡éªŒã€DTO/VOè½¬æ¢ã€è°ƒç”¨Mapper
+ * å¼•å…¥ Redis ç¼“å­˜
  */
 @Service
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserMapper userMapper;
 
+    @Autowired
+    private StringRedisTemplate redisTemplate;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @Override
     public UserVO createUser(UserDTO userDTO) {
-        // TODO: 1. ½« UserDTO ×ª»»Îª User Entity
-        // TODO: 2. ²¹È« Entity µÄÆäËû×Ö¶Î (Èç createTime)
-        // TODO: 3. µ÷ÓÃ userMapper.insert(user)
-        // TODO: 4. ½«²åÈëºóµÄ User Entity ×ª»»Îª UserVO ·µ»Ø
-        throw new UnsupportedOperationException("Method not implemented yet");
+        User user = new User();
+        user.setCreateTime(LocalDateTime.now());
+        BeanUtils.copyProperties(userDTO, user);
+        userMapper.insert(user);
+        UserVO userVO = new UserVO();
+        BeanUtils.copyProperties(user, userVO);
+        return userVO;
     }
 
     @Override
     public void deleteUser(Long id) {
-        // TODO: µ÷ÓÃ userMapper.deleteById(id)
-        throw new UnsupportedOperationException("Method not implemented yet");
+        // 1. åˆ é™¤æ•°æ®åº“
+        int rows = userMapper.deleteById(id);
+        if (rows == 0) throw new IllegalArgumentException("åˆ é™¤å¤±è´¥ï¼ŒIDä¸å­˜åœ¨" + id);
+        
+        // 2. åˆ é™¤ç¼“å­˜ (Cache Aside: å…ˆæ›´æ–°æ•°æ®åº“ï¼Œååˆ é™¤ç¼“å­˜)
+        String key = "user:cache:" + id;
+        redisTemplate.delete(key);
+        log.info("åˆ é™¤ç¼“å­˜: {}", key);
     }
 
     @Override
     public UserVO updateUser(UserDTO userDTO) {
-        // TODO: 1. ¼ì²éÓÃ»§ÊÇ·ñ´æÔÚ (¿ÉÑ¡)
-        // TODO: 2. ½« UserDTO ×ª»»Îª User Entity
-        // TODO: 3. µ÷ÓÃ userMapper.update(user)
-        // TODO: 4. ·µ»Ø¸üĞÂºóµÄÊı¾İ
-        throw new UnsupportedOperationException("Method not implemented yet");
+        // å…¼å®¹æ—§æ¥å£
+        User user = new User();
+        BeanUtils.copyProperties(userDTO, user);
+        userMapper.update(user);
+        
+        // åˆ é™¤ç¼“å­˜
+        if (userDTO.getId() != null) {
+            String key = "user:cache:" + userDTO.getId();
+            redisTemplate.delete(key);
+            log.info("åˆ é™¤ç¼“å­˜: {}", key);
+        }
+        
+        UserVO userVO = new UserVO();
+        BeanUtils.copyProperties(user, userVO);
+        return userVO;
     }
+    
+
 
     @Override
     public UserVO getUser(Long id) {
-        // TODO: 1. µ÷ÓÃ userMapper.selectById(id)
-        // TODO: 2. Èç¹ûÎª¿Õ£¬Å×³öÒì³£»ò·µ»Ø null
-        // TODO: 3. ½« User Entity ×ª»»Îª UserVO (×¢ÒâÒş²ØÃÜÂë)
-        // TODO: 4. ·µ»Ø UserVO
-        throw new UnsupportedOperationException("Method not implemented yet");
+        String key = "user:cache:" + id;
+
+        // 1. å…ˆæŸ¥ Redis
+        String json = redisTemplate.opsForValue().get(key);
+        if (StringUtils.hasText(json)) {
+            try {
+                // å¦‚æœå­˜åœ¨ï¼Œååºåˆ—åŒ–å¹¶è¿”å›
+                UserVO userVO = objectMapper.readValue(json, UserVO.class);
+                log.info("å‘½ä¸­ç¼“å­˜: {}", key);
+                return userVO;
+            } catch (JsonProcessingException e) {
+                log.error("JSON è§£æå¤±è´¥", e);
+            }
+        }
+
+        // 2. å†æŸ¥æ•°æ®åº“
+        User user = userMapper.selectById(id);
+        if (user == null) {
+            throw new RuntimeException("ç”¨æˆ·ä¸å­˜åœ¨ï¼ŒIDï¼š" + id);
+        }
+
+        UserVO userVO = new UserVO();
+        BeanUtils.copyProperties(user, userVO);
+
+        // 3. å†™å…¥ Redis (è¿‡æœŸæ—¶é—´ 30 åˆ†é’Ÿ)
+        try {
+            String cacheValue = objectMapper.writeValueAsString(userVO);
+            redisTemplate.opsForValue().set(key, cacheValue, 30, TimeUnit.MINUTES);
+            log.info("å†™å…¥ç¼“å­˜: {}", key);
+        } catch (JsonProcessingException e) {
+            log.error("JSON åºåˆ—åŒ–å¤±è´¥", e);
+        }
+
+        return userVO;
     }
 
     @Override
     public List<UserVO> getUserList(int page, int size) {
-        // TODO: 1. ¼ÆËã offset = (page - 1) * size
-        // TODO: 2. µ÷ÓÃ userMapper.selectList(offset, size)
-        // TODO: 3. ½« List<User> ×ª»»Îª List<UserVO>
-        // TODO: 4. ·µ»Ø List<UserVO>
+        // TODO: 1. è®¡ç®— offset = (page - 1) * size
+        // TODO: 2. è°ƒç”¨ userMapper.selectList(offset, size)
+        // TODO: 3. å°† List<User> è½¬æ¢ä¸º List<UserVO>
+        // TODO: 4. è¿”å› List<UserVO>
         throw new UnsupportedOperationException("Method not implemented yet");
+    }
+
+    @Override
+    public UserVO updateUserById(Long id, UserDTO userDTO) {
+        User user = new User();
+        BeanUtils.copyProperties(userDTO, user);
+        user.setId(id);
+
+        // 1. æ›´æ–°æ•°æ®åº“
+        userMapper.updateById(user);
+
+        // 2. åˆ é™¤ç¼“å­˜
+        String key = "user:cache:" + id;
+        redisTemplate.delete(key);
+        log.info("åˆ é™¤ç¼“å­˜: {}", key);
+
+        UserVO userVO = new UserVO();
+        BeanUtils.copyProperties(user, userVO);
+        return userVO;
+    }
+
+    @Override
+    public User getUserByUsername(String username) {
+        User user = userMapper.selectByUsername(username);
+        if (user == null) {
+            throw new RuntimeException("ç”¨æˆ·ä¸å­˜åœ¨ï¼Œusernameï¼š" + username);
+        }
+        return user;
     }
 }

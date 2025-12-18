@@ -6,50 +6,53 @@ import org.example.cruddemo.entity.User;
 import java.util.List;
 
 /**
- * User Mapper ½Ó¿Ú
- * ¸ºÔğÓëÊı¾İ¿â½øĞĞ½»»¥
+ * User Mapper æ¥å£
+ * è´Ÿè´£ä¸æ•°æ®åº“è¿›è¡Œäº¤äº’
  */
 @Mapper
 public interface UserMapper {
 
     /**
-     * ĞÂÔöÓÃ»§
-     * TODO: ÔÚ Mapper XML ÖĞÊµÏÖ insert Óï¾ä
-     * @param user ÓÃ»§ÊµÌå
-     * @return Ó°ÏìĞĞÊı
+     * æ–°å¢ç”¨æˆ·
+     * @param user ç”¨æˆ·å®ä½“
+     * @return å½±å“è¡Œæ•°
      */
     int insert(User user);
 
     /**
-     * ¸ù¾İ ID É¾³ıÓÃ»§
-     * TODO: ÔÚ Mapper XML ÖĞÊµÏÖ delete Óï¾ä
-     * @param id ÓÃ»§ID
-     * @return Ó°ÏìĞĞÊı
+     * æ ¹æ® ID åˆ é™¤ç”¨æˆ·
+     * åœ¨ Mapper XML ä¸­å®ç° delete è¯­å¥
+     * @param id ç”¨æˆ·ID
+     * @return å½±å“è¡Œæ•°
      */
     int deleteById(@Param("id") Long id);
 
     /**
-     * ¸üĞÂÓÃ»§ĞÅÏ¢
-     * TODO: ÔÚ Mapper XML ÖĞÊµÏÖ update Óï¾ä
-     * @param user ÓÃ»§ÊµÌå
-     * @return Ó°ÏìĞĞÊı
+     * æ›´æ–°ç”¨æˆ·ä¿¡æ¯
+     * åœ¨ Mapper XML ä¸­å®ç° update è¯­å¥
+     * @param user ç”¨æˆ·å®ä½“
+     * @return å½±å“è¡Œæ•°
      */
     int update(User user);
 
     /**
-     * ¸ù¾İ ID ²éÑ¯ÓÃ»§
-     * TODO: ÔÚ Mapper XML ÖĞÊµÏÖ select Óï¾ä
-     * @param id ÓÃ»§ID
-     * @return User ÊµÌå
+     * æ ¹æ® ID æŸ¥è¯¢ç”¨æˆ·
+     * åœ¨ Mapper XML ä¸­å®ç° select è¯­å¥
+     * @param id ç”¨æˆ·ID
+     * @return User å®ä½“
      */
     User selectById(@Param("id") Long id);
 
     /**
-     * ·ÖÒ³²éÑ¯ÓÃ»§ÁĞ±í
-     * TODO: ÔÚ Mapper XML ÖĞÊµÏÖ select Óï¾ä£¬×¢Òâ limit ·ÖÒ³
-     * @param offset Æ«ÒÆÁ¿ ( (page - 1) * size )
-     * @param limit Ã¿Ò³ÊıÁ¿
-     * @return User ÊµÌåÁĞ±í
+     * åˆ†é¡µæŸ¥è¯¢ç”¨æˆ·åˆ—è¡¨
+     * TODO: åœ¨ Mapper XML ä¸­å®ç° select è¯­å¥ï¼Œæ³¨æ„ limit åˆ†é¡µ
+     * @param offset åç§»é‡ ( (page - 1) * size )
+     * @param limit æ¯é¡µæ•°é‡
+     * @return User å®ä½“åˆ—è¡¨
      */
     List<User> selectList(@Param("offset") int offset, @Param("limit") int limit);
+
+    int updateById(User user);
+
+    User selectByUsername(String username);
 }

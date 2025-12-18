@@ -4,32 +4,32 @@ import lombok.Data;
 
 /**
  * User Data Transfer Object
- * ÓÃÓÚ½ÓÊÕÇ°¶Ë´«ÈëµÄ²ÎÊı£¨ÈçÌí¼ÓÓÃ»§¡¢ĞŞ¸ÄÓÃ»§£©
+ * ç”¨äºæ¥æ”¶å‰ç«¯ä¼ å…¥çš„å‚æ•°ï¼ˆå¦‚æ·»åŠ ç”¨æˆ·ã€ä¿®æ”¹ç”¨æˆ·ï¼‰
  */
 @Data
 public class UserDTO {
     /**
-     * ID (ĞŞ¸ÄÊ±±ØÌî£¬ĞÂÔöÊ±ºöÂÔ)
+     * ID (ä¿®æ”¹æ—¶å¿…å¡«ï¼Œæ–°å¢æ—¶å¿½ç•¥)
      */
     private Long id;
 
     /**
-     * ÓÃ»§Ãû
+     * ç”¨æˆ·å
      */
     private String username;
 
     /**
-     * ÃÜÂë
+     * å¯†ç 
      */
     private String password;
 
     /**
-     * ÓÊÏä
+     * é‚®ç®±
      */
     private String email;
 
     /**
-     * ÄêÁä
+     * å¹´é¾„
      */
     private Integer age;
 }
