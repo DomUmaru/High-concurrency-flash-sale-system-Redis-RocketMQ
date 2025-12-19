@@ -19,4 +19,9 @@
         WHERE user_id = #{userId} AND goods_id = #{goodsId}
     </select>
 
+    <select id="countByUserIdAndGoodsId" resultType="java.lang.Integer">
+        select count(1) from seckill_order
+        where user_id = #{userId} and goods_id = #{goodsId}
+    </select>
+
 </mapper>

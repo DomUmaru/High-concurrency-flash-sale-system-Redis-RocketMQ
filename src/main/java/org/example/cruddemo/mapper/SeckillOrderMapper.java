@@ -17,4 +17,6 @@ public interface SeckillOrderMapper {
      * 根据用户和商品查询订单（用于防重）
      */
     SeckillOrder selectByUserIdAndGoodsId(@Param("userId") Long userId, @Param("goodsId") Long goodsId);
+
+    int countByUserIdAndGoodsId(@Param("userId") Long userId, @Param("goodsId") Long goodsId);
 }
