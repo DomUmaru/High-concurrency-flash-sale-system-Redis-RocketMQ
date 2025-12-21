@@ -17,7 +17,7 @@ public class MD5Util {
      * 逻辑：MD5(UUID + 固定Salt)
      */
     public static String createSeckillPath(Long userId, Long goodsId) {
-        String str = userId + "_" + goodsId + "_" + UUID.randomUUID().toString() + SALT;
+        String str = userId + "_" + goodsId + "_" + UUID.randomUUID() + SALT;
         return md5(str);
     }
 }

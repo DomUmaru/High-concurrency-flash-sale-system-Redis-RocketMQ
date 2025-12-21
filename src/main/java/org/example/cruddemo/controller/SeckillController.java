@@ -12,7 +12,9 @@ import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.MessagingException;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.concurrent.TimeUnit;
@@ -33,6 +35,10 @@ public class SeckillController {
     @Autowired
     private SeckillOrderMapper seckillOrderMapper;
 
+    @Autowired
+    private SeckillGoodsMapper seckillGoodsMapper;
+
+
     // 获取秒杀地址接口
     @GetMapping("/path")
     public Result<String> getSeckillPath(@RequestParam Long goodsId, @RequestParam Long userId) {
@@ -48,6 +54,25 @@ public class SeckillController {
         return Result.success(str);
     }
 
+    // 模拟运营后台：发布秒杀活动，同步库存到 Redis
+    @PostMapping("/publish")
+    public Result<String> publishSeckill(@RequestParam Long goodsId) {
+        // 1. 查数据库
+        SeckillGoods goods = seckillGoodsMapper.selectById(goodsId);
+        if (goods == null) {
+            return Result.error("商品不存在");
+        }
+
+        // 2. 写入 Redis
+        String key = "seckill:stock:" + goodsId;
+        stringRedisTemplate.opsForValue().set(key, String.valueOf(goods.getStockCount()));
+
+        // 3. (进阶) 这里还可以把用来做一人一单的 Redis Set 也清空一下，方便测试
+        //stringRedisTemplate.delete("seckill:bought:" + goodsId); // 假设是 Set 结构的话
+
+        return Result.success("活动发布成功，库存已热加载至 Redis");
+    }
+
     /**
      * 秒杀接口
      * @param goodsId 商品ID
@@ -57,14 +82,15 @@ public class SeckillController {
     public Result<String> seckill(@PathVariable String path,
                                   @RequestParam Long goodsId,
                                   @RequestParam Long userId) {
+        //判断秒杀路径是否正确
         String pathKey = "seckill:path:" + userId + ":" + goodsId;
         String realPath = stringRedisTemplate.opsForValue().get(pathKey);
         if (realPath == null || !realPath.equals(path)) {
             return Result.error("非法请求，请重新获取秒杀地址！");
         }
 
-        String lockKey = "lock:user:" + userId;
         //redisson分布式锁是为了解决一人一单问题
+        String lockKey = "lock:user:" + userId;
         RLock lock = redissonClient.getLock(lockKey);
 
         boolean isLocked = false;
@@ -116,8 +142,7 @@ public class SeckillController {
         String boughtKey = "seckill:bought:" + goodsId + ":" + userId;
         String msgBody = userId + "," + goodsId;
 
-        org.springframework.messaging.Message<String> message = org.springframework.messaging.support.MessageBuilder
-                .withPayload(msgBody).build();
+        Message<String> message = MessageBuilder.withPayload(msgBody).build();
 
         try {
             rocketMQTemplate.sendMessageInTransaction("seckill-topic", message, new Object[]{userId, goodsId, stockKey, boughtKey});

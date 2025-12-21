@@ -19,4 +19,8 @@
         WHERE id = #{id}
     </select>
 
+    <select id="selectList" resultType="org.example.cruddemo.entity.SeckillGoods">
+        select * from seckill_goods
+    </select>
+
 </mapper>

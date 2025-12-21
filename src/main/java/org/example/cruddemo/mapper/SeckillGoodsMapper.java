@@ -3,6 +3,8 @@ package org.example.cruddemo.mapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.example.cruddemo.entity.SeckillGoods;
 
+import java.util.List;
+
 @Mapper
 public interface SeckillGoodsMapper {
     /**
@@ -18,4 +20,6 @@ public interface SeckillGoodsMapper {
      * @return 商品信息
      */
     SeckillGoods selectById(Long id);
+
+    List<SeckillGoods> selectList();
 }
