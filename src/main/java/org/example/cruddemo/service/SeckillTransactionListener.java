@@ -33,7 +33,7 @@ public class SeckillTransactionListener implements RocketMQLocalTransactionListe
 
             // 1. 再次检查是否重复 (双重保险)
             if (redisTemplate.hasKey(boughtKey)) {
-                log.info("用户" + userId + "已经购买过物品" + goodsId);
+                log.info("用户{}已经购买过物品{}", userId, goodsId);
                 return RocketMQLocalTransactionState.ROLLBACK;
             }
 

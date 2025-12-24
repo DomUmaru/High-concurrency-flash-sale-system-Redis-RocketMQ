@@ -17,6 +17,8 @@ import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @RestController
@@ -41,17 +43,29 @@ public class SeckillController {
 
     // 获取秒杀地址接口
     @GetMapping("/path")
-    public Result<String> getSeckillPath(@RequestParam Long goodsId, @RequestParam Long userId) {
-        // 1. 生成随机加密串
-        String str = MD5Util.createSeckillPath(userId, goodsId);
+    public Result<Map<String, Object>> getSeckillPath(@RequestParam Long goodsId, @RequestParam Long userId) {
+//        // 1. 生成随机加密串
+//        String str = MD5Util.createSeckillPath(userId, goodsId);
+//
+//        // 2. 存入 Redis (设置有效期60秒)
+//        // 为什么存 Redis？因为一会儿秒杀的时候，我要拿前端传来的跟 Redis 里的比对！
+//        // Key: seckill:path:userId:goodsId
+//        String key = "seckill:path:" + userId + ":" + goodsId;
+//        stringRedisTemplate.opsForValue().set(key, str, 60, TimeUnit.SECONDS);
+//
+//        return Result.success(str);
+        // 生成当前时间戳
+        long timestamp = System.currentTimeMillis();
 
-        // 2. 存入 Redis (设置有效期60秒)
-        // 为什么存 Redis？因为一会儿秒杀的时候，我要拿前端传来的跟 Redis 里的比对！
-        // Key: seckill:path:userId:goodsId
-        String key = "seckill:path:" + userId + ":" + goodsId;
-        stringRedisTemplate.opsForValue().set(key, str, 60, TimeUnit.SECONDS);
+        // 生成签名 (Stateless)
+        String sign = MD5Util.createSign(userId, goodsId, timestamp);
 
-        return Result.success(str);
+        // 返回给前端，前端下次请求要带上这两个东西
+        Map<String, Object> map = new HashMap<>();
+        map.put("sign", sign);      // 这就是之前的 "path"
+        map.put("timestamp", timestamp);
+
+        return Result.success(map);
     }
 
     // 模拟运营后台：发布秒杀活动，同步库存到 Redis
@@ -78,15 +92,33 @@ public class SeckillController {
      * @param goodsId 商品ID
      * @param userId 模拟的用户ID（实际开发中从 Token 获取）
      */
-    @PostMapping("/{path}/seckill")
-    public Result<String> seckill(@PathVariable String path,
+    @PostMapping("/{sign}/seckill")
+    public Result<String> seckill(@PathVariable("sign") String receivedSign,
+                                  @RequestParam Long timestamp,
                                   @RequestParam Long goodsId,
                                   @RequestParam Long userId) {
-        //判断秒杀路径是否正确
-        String pathKey = "seckill:path:" + userId + ":" + goodsId;
-        String realPath = stringRedisTemplate.opsForValue().get(pathKey);
-        if (realPath == null || !realPath.equals(path)) {
-            return Result.error("非法请求，请重新获取秒杀地址！");
+//        //判断秒杀路径是否正确
+//        String pathKey = "seckill:path:" + userId + ":" + goodsId;
+//        String realPath = stringRedisTemplate.opsForValue().get(pathKey);
+//        if (realPath == null || !realPath.equals(path)) {
+//            return Result.error("非法请求，请重新获取秒杀地址！");
+//        }
+
+        // 1. 检查有效期 (比如 60秒内有效)
+        // 防止黑客拿了一个去年的签名现在来刷
+        long now = System.currentTimeMillis();
+        if (now - timestamp > 60 * 1000) {
+            return Result.error("链接已过期，请重新获取！");
+        }
+
+        // 2. 重新计算签名
+        // 我们用同样的算法、同样的私钥(SALT)，算一遍应该是多少
+        String expectedSign = MD5Util.createSign(userId, goodsId, timestamp);
+
+        // 3. 比对签名
+        if (!expectedSign.equals(receivedSign)) {
+            // 如果不一样，说明有人篡改了参数，或者伪造了请求
+            return Result.error("非法请求，签名验证失败！");
         }
 
         //redisson分布式锁是为了解决一人一单问题
@@ -141,6 +173,10 @@ public class SeckillController {
         String stockKey = "seckill:stock:" + goodsId;
         String boughtKey = "seckill:bought:" + goodsId + ":" + userId;
         String msgBody = userId + "," + goodsId;
+
+        if (stringRedisTemplate.hasKey(boughtKey)) {
+            return Result.error("您已经购买过了");
+        }
 
         Message<String> message = MessageBuilder.withPayload(msgBody).build();
 

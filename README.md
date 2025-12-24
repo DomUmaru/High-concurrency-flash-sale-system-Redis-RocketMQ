@@ -1,103 +1,147 @@
-# User Management CRUD 练习指引
+# 🚀 High-Concurrency Seckill System (高并发秒杀系统)
 
-你好！这是一套专门为你准备的 **Spring Boot + MyBatis** 练习骨架。
-你的目标是完善这个项目，实现对用户的增删改查功能。
+![Java](https://img.shields.io/badge/Java-17-orange) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.1-green) ![RocketMQ](https://img.shields.io/badge/RocketMQ-5.0-blue) ![Redis](https://img.shields.io/badge/Redis-7.0-red)
 
-## ?? 准备工作 (Step 0)
+> A high-performance e-commerce seckill system implementation based on Spring Boot, RocketMQ, and Redis.  
+> 基于 Spring Boot + RocketMQ + Redis 构建的高性能电商秒杀系统，实现了在高并发场景下的**流量削峰**、**数据一致性**与**超卖防护**。
 
-在开始写 Java 代码之前，你需要先配置好环境。
+---
 
-### 1. 添加依赖 (`pom.xml`)
-目前的 `pom.xml` 可能缺少必要的库，请确保添加以下依赖：
-*   **Lombok**: 用于简化 Getter/Setter。
-*   **MyBatis Spring Boot Starter**: 用于数据库操作。
-*   **MySQL Driver** (或其他数据库驱动): 用于连接数据库。
+## 📖 项目简介 (Introduction)
 
-```xml
-<!-- 示例依赖 -->
-<dependency>
-    <groupId>org.projectlombok</groupId>
-    <artifactId>lombok</artifactId>
-    <optional>true</optional>
-</dependency>
-<dependency>
-    <groupId>org.mybatis.spring.boot</groupId>
-    <artifactId>mybatis-spring-boot-starter</artifactId>
-    <version>3.0.3</version>
-</dependency>
-<dependency>
-    <groupId>com.mysql</groupId>
-    <artifactId>mysql-connector-j</artifactId>
-    <scope>runtime</scope>
-</dependency>
-```
+本项目不仅仅是一个简单的 CRUD Demo，而是针对**互联网大厂高并发场景**（如双11秒杀、抢票）设计的解决方案原型。
 
-### 2. 准备数据库
-请在你的数据库中执行以下 SQL 建表语句：
+核心目标是解决以下技术难题：
+*   **高并发写**：如何防止瞬间流量击穿数据库？
+*   **超卖问题**：如何在多线程并发下保证库存数据的绝对安全？
+*   **接口防刷**：如何防止恶意脚本抢跑？
+*   **数据一致性**：如何保证缓存（Redis）与数据库（MySQL）之间的数据最终一致性？
+
+---
+
+## 🛠️ 技术栈 (Tech Stack)
+
+*   **核心框架**: Spring Boot 3.2.1
+*   **ORM**: MyBatis + MyBatis-Spring-Boot-Starter
+*   **数据库**: MySQL 8.0
+*   **缓存中间件**: Redis (Spring Data Redis + Redisson)
+*   **消息队列**: RocketMQ (事务消息 Transaction Message)
+*   **工具库**: Lombok, FastJSON, Apache Commons
+
+---
+
+## 💡 核心架构与亮点 (Architecture & Highlights)
+
+### 1. 流量削峰 (Traffic Shaving)
+利用 **RocketMQ** 将同步下单流程改为异步化。
+*   用户请求 -> Controller -> 发送 MQ 消息 -> 立即返回 "排队中"。
+*   消费者 (Consumer) -> 监听 MQ -> 慢速写入数据库。
+*   **效果**：将数据库的写压力从瞬间 10w QPS 降低到数据库可承受的范围。
+
+### 2. 多级缓存与一致性 (Multi-level Caching)
+*   **用户模块**：采用 **Cache-Aside Pattern (旁路缓存)** 模式。读请求优先查 Redis，写请求采用 "先更新 DB，后删除 Cache" 的策略，保证数据最终一致性。
+*   **秒杀模块**：采用 **Redis 预减库存**。秒杀开始前将库存预热至 Redis，所有的扣减操作在 Redis 内存中完成，拦截 99% 的无效流量。
+
+### 3. 分布式锁与防重 (Distributed Lock)
+*   引入 **Redisson** 实现分布式锁，解决 "一人一单" 问题，防止同一用户并发重复下单。
+*   利用 **RocketMQ 事务消息** 机制，将 "Redis 扣减库存" 与 "MQ 消息发送" 绑定为原子操作，确保不会出现 "Redis 扣了但消息没发" 的情况。
+
+### 4. 安全防护 (Security)
+*   **MD5 动态签名**：实现秒杀接口的地址隐藏。前端必须携带合法的 `sign` 签名（MD5(userId + goodsId + timestamp + salt)）才能请求接口，防止脚本刷单。
+*   **乐观锁 (Optimistic Locking)**：数据库底层使用 `stock_count > 0` 作为兜底逻辑，彻底杜绝超卖。
+
+---
+
+## ⚡ 快速开始 (Quick Start)
+
+### 1. 环境准备
+确保本地已安装并启动以下服务：
+*   **MySQL** (默认端口 3306)
+*   **Redis** (默认端口 6379)
+*   **RocketMQ** (NameServer: 9876, Broker: 10911)
+
+### 2. 数据库初始化
+请在 MySQL 中执行以下 SQL 脚本：
 
 ```sql
+-- 用户表
 CREATE TABLE `user` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `username` varchar(30) DEFAULT NULL COMMENT '姓名',
-  `password` varchar(100) DEFAULT NULL COMMENT '密码',
-  `email` varchar(50) DEFAULT NULL COMMENT '邮箱',
-  `age` int(11) DEFAULT NULL COMMENT '年龄',
-  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `username` varchar(30) DEFAULT NULL,
+  `password` varchar(100) DEFAULT NULL,
+  `email` varchar(50) DEFAULT NULL,
+  `age` int DEFAULT NULL,
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
+
+-- 秒杀商品表
+CREATE TABLE `seckill_goods` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `goods_name` varchar(100) DEFAULT NULL,
+  `stock_count` int DEFAULT NULL COMMENT '剩余库存',
+  PRIMARY KEY (`id`)
+);
+INSERT INTO seckill_goods (goods_name, stock_count) VALUES ('iPhone 15', 100);
+
+-- 秒杀订单表
+CREATE TABLE `seckill_order` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `user_id` bigint DEFAULT NULL,
+  `goods_id` bigint DEFAULT NULL,
+  `create_time` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_goods` (`user_id`, `goods_id`) -- 唯一索引防重
+);
 ```
 
-### 3. 配置数据库连接 (`application.properties`)
-记得配置 `spring.datasource.url`, `username`, `password` 等信息。
-同时指定 Mapper XML 的位置：
+### 3. 修改配置
+打开 `src/main/resources/application.properties`，修改你的数据库和中间件配置：
+
 ```properties
-mybatis.mapper-locations=classpath:mapper/*.xml
+spring.datasource.url=jdbc:mysql://localhost:3306/your_db_name
+spring.datasource.username=root
+spring.datasource.password=your_password
+
+rocketmq.name-server=127.0.0.1:9876
 ```
 
----
-
-## ? 开发步骤 (你的任务)
-
-请按照以下顺序填充代码：
-
-### Step 1: 实现 Mapper XML
-*   **文件**: `src/main/resources/mapper/UserMapper.xml`
-*   **任务**: 找到 `TODO` 标签，编写具体的 SQL 语句 (`INSERT`, `SELECT`, `UPDATE`, `DELETE`)。
-*   **提示**: 注意 `resultType` 和参数占位符 `#{}` 的使用。
-
-### Step 2: 实现 Service 层
-*   **文件**: `src/main/java/.../service/impl/UserServiceImpl.java`
-*   **任务**: 实现接口中定义的方法。
-*   **核心逻辑**:
-    *   **UserDTO -> User**: 当 Controller 传来数据时，需要把 DTO 转成 Entity 才能存入数据库。
-    *   **User -> UserVO**: 当从数据库查出数据时，需要把 Entity 转成 VO 再返回给 Controller（注意不要把 `password` 泄露给 VO）。
-    *   **调用 Mapper**: 使用 `userMapper` 执行数据库操作。
-
-### Step 3: 实现 Controller 层
-*   **文件**: `src/main/java/.../controller/UserController.java`
-*   **任务**: 补全方法体，调用 Service 层的方法，并返回 `ResponseEntity`。
-
-### Step 4: 测试
-*   启动 `CrudDemoApplication`。
-*   使用 Postman 或 Apifox 测试接口：
-    *   POST `http://localhost:8080/users` (添加)
-    *   GET `http://localhost:8080/users` (列表)
-    *   ...
+### 4. 启动项目
+运行 `CrudDemoApplication.java`。项目启动时会自动执行 `StockWarmup` 类，将数据库库存预热到 Redis 中。
 
 ---
 
-## ? 知识点：DTO, Entity, VO 的流转
+## 🧪 接口测试 (API Testing)
 
-为了解耦和安全，我们在不同层使用不同的对象：
+### 1. 获取秒杀签名
+*   **URL**: `GET /seckill/path`
+*   **Params**: `goodsId=1`, `userId=1001`
+*   **Response**: 
+    ```json
+    {
+        "code": 200,
+        "msg": "success",
+        "data": {
+            "sign": "38b9...",
+            "timestamp": 1700000000000
+        }
+    }
+    ```
 
-1.  **前端 -> Controller**: 传入 **DTO** (Data Transfer Object)。包含用户填写的表单数据（如用户名、密码）。
-2.  **Controller -> Service**: 传递 **DTO**。
-3.  **Service 内部**:
-    *   将 **DTO** 转换为 **Entity** (对应数据库表结构)。
-    *   调用 Mapper 保存 **Entity**。
-    *   从 Mapper 获取 **Entity**。
-    *   将 **Entity** 转换为 **VO** (View Object)。**VO** 是专门给前端看的，**绝对不能包含 password**！
-4.  **Service -> Controller**: 返回 **VO**。
-5.  **Controller -> 前端**: 返回 **VO** (JSON格式)。
+### 2. 执行秒杀
+*   **URL**: `POST /seckill/{sign}/seckill`
+*   **Params**: `userId=1001`, `goodsId=1`, `timestamp=...`
+*   **Response**:
+    ```json
+    {
+        "code": 200,
+        "msg": "success",
+        "data": "排队中"
+    }
+    ```
 
-加油！完成这个练习后，你对 Spring Boot CRUD 的流程就会非常熟悉了。
+---
+
+## 📝 License
+
+This project is licensed under the MIT License.
