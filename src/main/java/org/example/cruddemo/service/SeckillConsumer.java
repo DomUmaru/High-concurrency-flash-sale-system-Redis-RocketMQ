@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import java.time.LocalDateTime;
 
@@ -58,6 +59,8 @@ public class SeckillConsumer implements RocketMQListener<String> {
             // 说明该消息已经被消费成功过，订单已存在。
             // 此时应该“吞掉”异常，不要抛出，告诉 RocketMQ "我消费成功了"，停止重试。
             log.warn("【消费者】消息重复消费，订单已存在，直接忽略。userId={}, goodsId={}", userId, goodsId);
+            //把扣减库存恢复，catch后不会执行事务回滚，抛出异常才会，但是抛出异常在MQ中又会重试操作
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
 
         } catch (Exception e) {
             // 4. 【异常重试处理】捕获其他未知异常 (如数据库挂了、网络抖动)

@@ -97,4 +97,18 @@ public class UserController {
         User user = userService.getUserByUsername(username);
         return Result.success(user);
     }
+
+    /**
+     * 模拟 CPU 100% 的死循环接口
+     */
+    @GetMapping("/cpu/loop")
+    public String cpuLoop() {
+        System.out.println("完蛋了，CPU 要爆炸了...");
+
+        // 死循环：没有任何休眠，疯狂占用 CPU 时间片
+        while (true) {
+            // 做点无意义的计算，防止被编译器优化掉
+            Math.sqrt(123456789.0);
+        }
+    }
 }
